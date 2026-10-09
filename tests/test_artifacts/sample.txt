@@ -1,0 +1,8 @@
+Policy Name: Global Access Control Policy
+Version: 2.4
+Owner: InfoSec Architecture Team
+Effective Date: 2026-01-01
+Review Date: 2026-12-31
+
+Privileged accounts must use multi-factor authentication.
+Administrative access must be reviewed every 90 days.

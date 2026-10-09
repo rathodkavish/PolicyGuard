@@ -1,0 +1,34 @@
+﻿# Secrets and environment files
+.env
+.env.*
+!.env.example
+
+# Python cache and virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Local runtime state and uploaded documents
+data_store/
+uploads/
+output/
+
+# Original backup copy
+_backup_original/
+
+# Generated databases, logs, and reports
+*.sqlite
+*.sqlite3
+*.db
+*.log
+compliance_report.csv
+noncompliant_accounts.csv
+results.json
+dashboard.html
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini

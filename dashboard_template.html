@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Access Control Compliance Dashboard</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--text:#1d2530;--muted:#5d6877;--line:#d9dee5;--accent:#1f3864;--g:#2e7d32;--gb:#e3f1e4;--a:#a26a00;--ab:#fff1cf;--r:#b3261e;--rb:#f9dedc}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181e;--card:#1d232c;--text:#e6e9ee;--muted:#9aa5b4;--line:#323b47;--accent:#8fb0e8;--g:#7fd18a;--gb:#1f3524;--a:#f0c25a;--ab:#3a2f12;--r:#ff8f86;--rb:#42201d}}
+:root[data-theme="dark"]{--bg:#14181e;--card:#1d232c;--text:#e6e9ee;--muted:#9aa5b4;--line:#323b47;--accent:#8fb0e8;--g:#7fd18a;--gb:#1f3524;--a:#f0c25a;--ab:#3a2f12;--r:#ff8f86;--rb:#42201d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Calibri,Carlito,"Segoe UI",Arial,sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:22px;margin:0 0 2px;color:var(--accent)}
+.sub{color:var(--muted);margin:0 0 16px}
+.badge{display:inline-block;font-size:12px;padding:2px 8px;border-radius:10px;border:1px solid var(--line);color:var(--muted);margin-right:6px}
+.top{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+.sum{flex:1 1 220px}.tune{flex:2 1 420px}
+.big{font-size:34px;font-weight:700}
+.panel h3{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.row{display:flex;align-items:center;gap:10px;margin:6px 0;flex-wrap:wrap}
+.row label{flex:0 0 230px;font-size:14px}
+.row input[type=range]{flex:1 1 140px}
+.row b{min-width:62px;text-align:right}
+button{font:inherit;background:var(--accent);color:var(--bg);border:0;border-radius:8px;padding:7px 14px;cursor:pointer}
+button.alt{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.flow{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.flow span{flex:1 1 130px;text-align:center;padding:8px 6px;border:1px solid var(--line);background:var(--card);border-radius:8px;font-size:13px;font-weight:600}
+.flow span:not(:last-child)::after{content:" \2192";color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-bottom:14px}
+.card{background:var(--card);color:var(--text);border:2px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;text-align:left}
+.card.sel{border-color:var(--accent)}
+.card .id{font-weight:700;color:var(--accent)}
+.pct{font-size:30px;font-weight:700;margin:4px 0}
+.st{display:inline-block;padding:1px 9px;border-radius:10px;font-size:12px;font-weight:700}
+.GREEN{background:var(--gb);color:var(--g)}.AMBER{background:var(--ab);color:var(--a)}.RED{background:var(--rb);color:var(--r)}
+.bar{height:8px;background:var(--line);border-radius:5px;margin:8px 0;overflow:hidden}
+.bar i{display:block;height:100%}
+.small{font-size:13px;color:var(--muted)}
+.detail{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.step{border-left:3px solid var(--accent);padding:2px 0 2px 10px;margin:0 0 10px}
+.step b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.tags span{display:inline-block;font-size:12px;border-radius:6px;background:var(--bg);border:1px solid var(--line);padding:1px 7px;margin:2px 4px 2px 0}
+.tw{max-height:300px;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line)}
+th{position:sticky;top:0;background:var(--card);font-size:12px;color:var(--muted);text-transform:uppercase}
+.note{margin-top:14px;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Access Control Policy: Continuous Compliance Dashboard</h1>
+<p class="sub"><span class="badge" id="src"></span><span class="badge">NIST SP 800-53</span><span class="badge">ISO/IEC 27001:2022</span> Results below come from the Python checker; the sliders let you try other thresholds.</p>
+<div class="flow"><span>1. Policy</span><span>2. Requirement</span><span>3. Automated check</span><span>4. Telemetry</span><span>5. Report</span></div>
+<div class="top">
+<div class="panel sum"><h3>Overall posture</h3><div class="big" id="overall">-</div><div id="counts" class="small"></div></div>
+<div class="panel tune"><h3>What-if: change the rules and watch results move</h3>
+<div class="row"><label for="review_days">Admin access review window (days)</label><input id="review_days" type="range" min="30" max="180" step="5"><b id="v_review_days"></b></div>
+<div class="row"><label for="leaver_hours">Leaver removal deadline (hours)</label><input id="leaver_hours" type="range" min="1" max="72"><b id="v_leaver_hours"></b></div>
+<div class="row"><label for="dormant_days">Dormant account limit (days)</label><input id="dormant_days" type="range" min="15" max="90"><b id="v_dormant_days"></b></div>
+<div class="row"><button id="reset">Reset to Python values</button><button class="alt" id="theme">Light / dark</button><button class="alt" id="csv">Download report (CSV)</button></div>
+</div></div>
+<div class="cards" id="cards"></div>
+<div class="detail" id="detail"></div>
+<p class="note" id="note"></p>
+</div>
+<script>
+var DATA=/*__DATA__*/null;
+//LOGIC-START
+function runChecks(A,P,C){
+ var chk={
+  R1:function(){var s=A.filter(function(x){return x.is_admin&&x.enabled});return[s.length,s.filter(function(x){return!x.mfa}).map(function(x){return[x.account,"No MFA"]})]},
+  R2:function(){var s=A.filter(function(x){return x.is_admin&&x.enabled});return[s.length,s.filter(function(x){return x.review_days>P.review_days}).map(function(x){return[x.account,"Last review "+x.review_days+" days ago"]})]},
+  R3:function(){var s=A.filter(function(x){return x.left}),b=[];s.forEach(function(x){var h=x.disabled_after_hours;if(x.enabled)b.push([x.account,"Still enabled"]);else if(h===null)b.push([x.account,"No disable time recorded"]);else if(h>P.leaver_hours)b.push([x.account,"Disabled after "+h+" h"])});return[s.length,b]},
+  R4:function(){var s=A.filter(function(x){return x.enabled});return[s.length,s.filter(function(x){return x.login_days>P.dormant_days}).map(function(x){return[x.account,"Last login "+x.login_days+" days ago"]})]}};
+ return C.map(function(c){var o=chk[c.id](),t=o[0],b=o[1],p=t?100*(t-b.length)/t:100;
+  return{c:c,t:t,b:b,p:p,s:p>=100?"GREEN":p>=c.amber?"AMBER":"RED",req:c.requirement.replace(/\{(\w+)\}/g,function(m,k){return P[k]})}})}
+//LOGIC-END
+var P=JSON.parse(JSON.stringify(DATA.thresholds)),sel=DATA.controls[0].id,R=[];
+function col(s){return s==="GREEN"?"var(--g)":s==="AMBER"?"var(--a)":"var(--r)"}
+function esc(s){return String(s).replace(/[&<>]/g,function(m){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[m]})}
+function draw(){R=runChecks(DATA.accounts,P,DATA.controls);
+var g=R.filter(function(x){return x.s==="GREEN"}).length,a=R.filter(function(x){return x.s==="AMBER"}).length,r=R.length-g-a,avg=R.reduce(function(s,x){return s+x.p},0)/R.length;
+document.getElementById("overall").textContent=avg.toFixed(1)+"%";
+document.getElementById("counts").textContent=g+" green, "+a+" amber, "+r+" red (average across "+R.length+" controls)";
+Object.keys(P).forEach(function(k){document.getElementById("v_"+k).textContent=P[k]+(k==="leaver_hours"?" h":" d");document.getElementById(k).value=P[k]});
+document.getElementById("cards").innerHTML=R.map(function(x){return'<button class="card'+(x.c.id===sel?' sel':'')+'" data-id="'+x.c.id+'"><span class="id">'+x.c.id+'</span> '+esc(x.c.title)+'<div class="pct" style="color:'+col(x.s)+'">'+x.p.toFixed(1)+'%</div><span class="st '+x.s+'">'+x.s+'</span><div class="bar"><i style="width:'+x.p+'%;background:'+col(x.s)+'"></i></div><div class="small">'+x.b.length+' of '+x.t+' accounts non-compliant</div></button>'}).join("");
+var d=R.filter(function(x){return x.c.id===sel})[0],c=d.c;
+var rows=d.b.length?d.b.map(function(y){return"<tr><td>"+esc(y[0])+"</td><td>"+esc(y[1])+"</td><td>Ticket to owner</td></tr>"}).join(""):'<tr><td colspan="3">No exceptions. All in-scope accounts comply.</td></tr>';
+document.getElementById("detail").innerHTML='<div class="panel"><h3>'+c.id+' walkthrough: policy to report</h3>'+
+'<div class="step"><b>1. Policy statement</b>'+esc(c.policy)+'</div>'+
+'<div class="step"><b>2. Technical requirement</b>'+esc(d.req)+'<div class="tags">'+c.mapping.map(function(m){return"<span>"+esc(m)+"</span>"}).join("")+'</div></div>'+
+'<div class="step"><b>3. Automated check</b>'+esc(c.check)+'<div class="small">Source: '+esc(c.source)+' | Frequency: '+esc(c.frequency)+'</div></div>'+
+'<div class="step"><b>4. Telemetry (metric)</b>'+d.p.toFixed(1)+'% compliant ('+(d.t-d.b.length)+' of '+d.t+' in scope)</div>'+
+'<div class="step"><b>5. Report and action</b><span class="st '+d.s+'">'+d.s+'</span> Owner: '+esc(c.owner)+'. Each failing account is written to the evidence file and sent as a ticket.</div></div>'+
+'<div class="panel"><h3>Non-compliant accounts ('+d.b.length+')</h3><div class="tw"><table><thead><tr><th>Account</th><th>Finding</th><th>Action</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'}
+document.getElementById("src").textContent="Data: "+DATA.source+" ("+DATA.as_of+")";
+document.getElementById("note").textContent="Control mappings are for learning; confirm exact IDs in the official NIST and ISO documents. If the data file is sample data, say so when presenting.";
+document.getElementById("cards").addEventListener("click",function(e){var b=e.target.closest(".card");if(b){sel=b.getAttribute("data-id");draw()}});
+Object.keys(P).forEach(function(k){document.getElementById(k).addEventListener("input",function(e){P[k]=+e.target.value;draw()})});
+document.getElementById("reset").addEventListener("click",function(){P=JSON.parse(JSON.stringify(DATA.thresholds));draw()});
+document.getElementById("theme").addEventListener("click",function(){var h=document.documentElement,dark=h.getAttribute("data-theme")==="dark"||(h.getAttribute("data-theme")!=="light"&&matchMedia("(prefers-color-scheme:dark)").matches);h.setAttribute("data-theme",dark?"light":"dark")});
+document.getElementById("csv").addEventListener("click",function(){var t="control,requirement,in_scope,non_compliant,compliance_pct,status\n"+R.map(function(x){return[x.c.id,'"'+x.req+'"',x.t,x.b.length,x.p.toFixed(1),x.s].join(",")}).join("\n");
+var u=URL.createObjectURL(new Blob([t],{type:"text/csv"})),a=document.createElement("a");a.href=u;a.download="dashboard_report.csv";document.body.appendChild(a);a.click();a.remove()});
+draw();
+</script>
+</body>
+</html>
